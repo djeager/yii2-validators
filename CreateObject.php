@@ -5,83 +5,69 @@ namespace djeager\validators;
 
 class CreateObject extends \yii\validators\Validator
 {
+    /**
+     * @var string $namespace
+     * название обьекта arrayValue|value - название обьекта будет братся из значения массива 
+     */
     public $namespace = null;
     
+    /**
+     * @var string $objectName []
+     * название обьекта arrayValue|value - название обьекта будет братся из значения массива
+     */
     public $objectName = null;
     
+    /**
+     * @var string $fullName
+     * полное название обьекта с пространством имен
+     */
     public $fullName = null;
     
+    /**
+     * @var array $construct
+     * значение для конструктора
+     */
     public $construct = [];
     
-    public $attributes = null;
-    
+    /**
+     * @var boll $validate
+     * валидировать?
+     */
     public $validate = true;
     
+    /**
+     * @var bool $isArray
+     * являются ли attribute массивом обьектов
+     */
     public $isArray = false;
     
+    /**
+     * @var bool $return 
+     * возвращать данный или установить как атрибут
+     */
     public $return = false;
     
+    /**
+     * @var string $indexBy
+     * if isArray каким атрибутом индексировать 
+     */
     public $indexBy = null;
     
     
     public function validateAttribute($model, $attribute)
     {
-         
-    }
-    protected function create($objname,$values){
-            extract($p);
-            
-            $obj= $fullName?:$namespace.'\\'.ucfirst($objname);
-            if (!class_exists($obj)){$this->addError($attribute, "Объект '$attribute' не сушествует");return false;}            
-            
-            $obj=new $obj($construct); 
-            $obj->setAttributes($values);
-            if($validate) if(!$obj->validate()) $this->addError($attribute,$obj->getErrors());
-            return $obj;
-    }  
-    
-    
-    public function vObjectCreate($attribute, array $params)
-    {
-        if(is_object($this->$attribute)) return;
-        $p=array_merge([
-            'namespace'     => null, 
-            'objectName'    => null,     // название обьекта arrayValue|value - название обьекта будет братся из значения массива 
-            'fullName'      => null,     // полное название обьекта с пространством имен
-            'construct'     => null,     // значение для конструктора
-            'attributes'    => $this->$attribute,   // атрибуты для загрузки в обьект ActiveRecords
-            'validate'      => true,     // валидировать?
-            'isArray'       => false,    // являются ли attributes массивом обьектов
-            'return'        => false,    // true|false - возвращать данный или установить как атрибут
-            'indexBy'       => null,     // if isArray каким атрибутом индексировать 
-            ],$params);
-        extract($p);
-        $arr=[];
-        
-        $create=function($objname,$values)use($attribute,$p){
-            extract($p);
-            
-            $obj= $fullName?:$namespace.'\\'.ucfirst($objname);
-            if (!class_exists($obj)){$this->addError($attribute, "Объект '$attribute' не сушествует");return false;}            
-            
-            $obj=new $obj($construct); 
-            $obj->setAttributes($values);
-            if($validate) if(!$obj->validate()) $this->addError($attribute,$obj->getErrors());
-            return $obj;
-        };    
-     
-        if($isArray){
-            foreach($attributes as $key=>$value){
-                if($objectName=='arrayValue'){
+        if($this->isArray){
+            foreach($model->$attribute as $key=>$value){
+                if($this->objectName=='arrayValue'){
                     $objname=is_array($value)?key($value):$value;
                     $arr[$objname]=$create($objname,$value);
-                }elseif($objectName=='arrayKey'){
+                }elseif($this->objectName=='arrayKey'){
                     $objname=$key;
                     $arr[$objname]=$create($objname,$value);
                 }else{
                     $objname=$attribute;
-                    $obj=$create($objname,$value);
-                    $arr[$indexBy?$obj->$indexBy:$key]=$obj;
+                    $obj=$this->create($objname,$value);
+                    $arr[$this->indexBy?$obj->{$this->indexBy}:$key]=$obj;
                 }
             }
         }else {
@@ -94,8 +80,20 @@ class CreateObject extends \yii\validators\Validator
             
         }
         
-        if($return) return $arr;
-        else $this->$attribute=$arr;
-    }
+        if($this->return) return $arr;
+        else $model->$attribute=$arr;
 
+         
+    }
+    protected function create($objname,$values){
+            
+            $obj= $this->fullName?:$this->namespace.'\\'.ucfirst($objname);
+            if (!class_exists($obj)){$model->addError($objname, "Объект '$obj' не найден");return false;}            
+            
+            $obj=new $obj($this->construct); 
+            $obj->setAttributes($values);
+            if($this->validate) if(!$obj->validate()) $this->addError($attribute,$obj->getErrors());
+            return $obj;
+    }  
 }
+?>
