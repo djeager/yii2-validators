@@ -80,7 +80,7 @@ class CreateObject extends \yii\validators\Validator
             
         }
         
-        if($this->return) return $arr;
+        if($this->return) return $arr; 
         else $model->$attribute=$arr;
 
          
