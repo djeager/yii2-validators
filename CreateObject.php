@@ -80,7 +80,7 @@ class CreateObject extends \yii\validators\Validator
             
         }
         
-        if($this->return) return $arr; 
+        if($this->return) return $arr;
         else $model->$attribute=$arr;
 
          
@@ -88,7 +88,8 @@ class CreateObject extends \yii\validators\Validator
     protected function create($objname,$values){
             
             $obj= $this->fullName?:$this->namespace.'\\'.ucfirst($objname);
-            if (!class_exists($obj)){$model->addError($objname, "Объект '$obj' не найден");return false;}            
+            
+            if (!class_exists($obj)){$model->addError($objname, "Объект '$obj' не найден");return false;} 
             
             $obj=new $obj($this->construct); 
             $obj->setAttributes($values);
