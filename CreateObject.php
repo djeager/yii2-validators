@@ -6,23 +6,17 @@ namespace djeager\validators;
 class CreateObject extends \yii\validators\Validator
 {
     /**
-     * @var string $namespace
-     * название обьекта arrayValue|value - название обьекта будет братся из значения массива 
+     * @var object|array $object
+     * если тип = object то будет клонироватся этот объект и загружатся в него 
+     * если тип array будем создавать обьект с параметрами из массива
      */
-    public $namespace = null;
-    
-    /**
-     * @var string $objectName []
-     * название обьекта arrayValue|value - название обьекта будет братся из значения массива
-     */
-    public $objectName = null;
-    
-    /**
-     * @var string $fullName
-     * полное название обьекта с пространством имен
-     */
-    public $fullName = null;
-    
+    public $object=[
+        'namespace' => null,    // string|null пространнство имен для создания обьекта
+        'fullName' => null,     // string|null полное название обьекта с пространством имен
+        'name' => null,         // string|null [value|arrayValue|arrayKey] что считать именем обьекта
+        'object' => null,       // object|string|null сам обьект или стока с названием обьекта
+        'property' => null,     // string|null если @var $object[object] == is object то веронем своейство из обьекта               
+    ];
     /**
      * @var array $construct
      * значение для конструктора
@@ -58,43 +52,54 @@ class CreateObject extends \yii\validators\Validator
     {
         if($this->isArray){
             foreach($model->$attribute as $key=>$value){
-                if($this->objectName=='arrayValue'){
+                if(@$this->object['name']=='arrayValue'){
                     $objname=is_array($value)?key($value):$value;
-                    $arr[$objname]=$create($objname,$value);
-                }elseif($this->objectName=='arrayKey'){
+                    $arr[$objname]=$this->create($objname,$value,$model,$attribute);
+                }elseif(@$this->object['name']=='arrayKey'){
                     $objname=$key;
-                    $arr[$objname]=$create($objname,$value);
+                    $arr[$objname]=$this->create($objname,$value,$model,$attribute);
                 }else{
                     $objname=$attribute;
-                    $obj=$this->create($objname,$value);
+                    $obj=$this->create($objname,$value,$model,$attribute);
                     $arr[$this->indexBy?$obj->{$this->indexBy}:$key]=$obj;
                 }
             }
         }else {
-            if($objectName=='value'){
-                $objname=is_array($this->$attribute)?key($this->$attribute):$this->$attribute;
+            if(@$this->object['name']=='value'){
+                $objname=is_array($model->$attribute)?key($model->$attribute):$model->$attribute;
 
-                $value=is_array($this->$attribute)?reset($this->$attribute):$attributes;
-                $arr=$create($objname,$value);
-            }else $arr=$create($attribute,$attributes);
+                //$value=is_array($model->$attribute)?reset($model->$attribute):$attributes;
+                $value = is_array($model->$attribute)?reset($model->$attribute):$model->$attribute;
+
+                $arr=$this->create($objname,$value,$model,$attribute);
+            }else $arr=$this->create($attribute,$attributes,$model,$attribute);
             
         }
-        
-        if($this->return) return $arr;
-        else $model->$attribute=$arr;
-
-         
+ 
+        return $this->return?$arr:$model->$attribute=$arr;         
     }
-    protected function create($objname,$values){
+    
+    
+    protected function create($objname,$values,$model,$attribute){
+            $obj=$this->getObject($objname,$model)?:$model->addError($attribute, "Объект '$attribute' не найден");
+            if(!is_object($obj)) return false;
             
-            $obj= $this->fullName?:$this->namespace.'\\'.ucfirst($objname);
-            
-            if (!class_exists($obj)){$model->addError($objname, "Объект '$obj' не найден");return false;} 
-            
-            $obj=new $obj($this->construct); 
+            $obj->__construct($this->construct);
             $obj->setAttributes($values);
-            if($this->validate) if(!$obj->validate()) $this->addError($attribute,$obj->getErrors());
+            if($this->validate) if(!$obj->validate()) $model->addError($attribute,$obj->getErrors());
             return $obj;
     }  
+    protected function getObject($name,$model){
+        if(is_object($this->object)) return $this->object;
+        
+        $o=array_merge(['object'=>$name],(array)$this->object);
+
+        extract($o);
+        if(is_object($object)) return $property?$object->$property:$object;
+        else{
+            $name=@$fullname?:@$namespace.'\\'.$object;
+            return class_exists($name)? new $name:false;
+        }
+    }
 }
 ?>
