@@ -72,7 +72,7 @@ class CreateObject extends \yii\validators\Validator
                 $value = is_array($model->$attribute)?reset($model->$attribute):$model->$attribute;
 
                 $arr=$this->create($objname,$value,$model,$attribute);
-            }else $arr=$this->create($attribute,$attributes,$model,$attribute);
+            }else $arr=$this->create($attribute,$model->$attribute,$model,$attribute);
             
         }
  
