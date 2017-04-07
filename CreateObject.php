@@ -95,7 +95,7 @@ class CreateObject extends \yii\validators\Validator
         $o=array_merge(['object'=>$name],(array)$this->object);
 
         extract($o);
-        if(is_object($object)) return $property?$object->$property:$object;
+        if(is_object(@$object)) return @$property?$object->$property:$object;
         else{
             $name=@$fullname?:@$namespace.'\\'.$object;
             return class_exists($name)? new $name:false;
