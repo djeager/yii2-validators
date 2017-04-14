@@ -97,7 +97,7 @@ class CreateObject extends \yii\validators\Validator
         extract($o);
         if(is_object(@$object)) return @$property?$object->$property:$object;
         else{
-            $name=@$fullname?:@$namespace.'\\'.$object;
+            $name=@$fullname?:@$namespace.'\\'.ucfirst($object);
             return class_exists($name)? new $name:false;
         }
     }
