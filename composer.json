@@ -1,0 +1,21 @@
+{
+    "name": "djeager/yii2-validators",
+    "description": "several validators for the expansion of the functional",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "djeager",
+            "email": "djeager404@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "djeager\\validators\\": ""
+        }
+    }
+}
