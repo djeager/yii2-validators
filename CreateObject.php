@@ -83,9 +83,10 @@ class CreateObject extends \yii\validators\Validator
     protected function create($objname,$values,$model,$attribute){
             $obj=$this->getObject($objname,$model)?:$model->addError($attribute, "Объект '$attribute' не найден");
             if(!is_object($obj)) return false;
-            
+
             $obj->__construct($this->construct);
-            $obj->setAttributes($values);
+            $obj->setAttributes($values,false);
+        
             if($this->validate) if(!$obj->validate()) $model->addError($attribute,$obj->getErrors());
             return $obj;
     }  
