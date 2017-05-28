@@ -85,7 +85,7 @@ class CreateObject extends \yii\validators\Validator
             if(!is_object($obj)) return false;
 
             $obj->__construct($this->construct);
-            $obj->setAttributes($values,false);
+            $obj->setAttributes($values);
         
             if($this->validate) if(!$obj->validate()) $model->addError($attribute,$obj->getErrors());
             return $obj;
